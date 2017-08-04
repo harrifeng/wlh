@@ -11,3 +11,126 @@
   #+begin_example
     3
   #+end_example
+* 解法分析
+  + 这个题目非常的有代表性考察的是你对哈希表的理解
+  + 但是问题是NOI不能使用cpp的哈希表,所以这里要使用数组来模拟哈希表
+  + 首先来看看什么是哈希表:
+    - 名字来源于其英文Hash的发音,哈希表就是hash table
+    - 哈希表的用处是用来进行快速查询,怎么快速查询呢.举个例子.你的安卓手机的通讯录
+      就是一个哈希表.比如你想查找一个名字"吴乐寒",通讯录会在右边有一个'w'让你按.
+      这个'w'里面还包括所有以w开头的汉语拼音,比如'王', '魏'
+    - 上面例子的'w'就是hash table的key, 上面例子的'王','吴','魏'就是它的value
+    - 所以哈希表是这么一个东西
+      #+begin_example
+        你给它一个key,它返回给你一个(或者多个)value
+      #+end_example
+  + NOI里面不能使用cpp的内置hash table,所以只能用数组来模拟,比如用int数组来模拟
+    这种情况下,value的值就只能是'个数',不可能是其他值
+    #+begin_src cpp
+      #include <iostream>
+      using namespace std;
+
+      int main(int argc, char *argv[])
+      {
+          int arr[5] = { 0 };
+          arr[1] = 11;
+          arr[2] = 22;
+
+          int key = 1;
+          cout << arr[key] << endl;
+
+          key = 2;
+          cout << arr[key] << endl;
+
+          return 0;
+      }
+
+
+      // OUTPUT----------------->
+      // 11
+      // 22
+    #+end_src
+  + 所以从另外一个维度看,数组也是一种哈希表
+  + 回到题目,这个题目给我们一个列表,比如1, 2, 1, 3,删除k个以后最多剩余多少种. 它
+    给你的输入其实是可以分成三堆的:
+    - 1, 1
+    - 2
+    - 3
+  + 让你删除一个,还要保持种类,你怎么删,你肯定删除1啊,还能剩三种.
+  + 我们再举个例子, 1, 1, 1, 2, 2, 3, 4:
+    - 1, 1, 1
+    - 2, 2
+    - 3
+    - 4
+  + 如果:
+    - k = 1 你怎么删,删除1或者2都可以
+    - k = 2 呢可以删除一个1, 一个2, 或者两个1
+    - k = 3 比如删除两个1, 一个2
+    - k = 4 在k=3继承上再删除1个
+    - k = 5 在k=3继承上再删除2个
+  + 发现这个题目的精髓了么?一个值,比如1(或者2,3),只需要一个值来站住位置就好了(有
+    一个值就叫有一类),所以剩下的都三个是多余的:两个1一个2都是多余的:
+    - 如果k小于等于3,那么种类就是4!注意你顶多就四类
+    - 如果k大于3,那么除了多余的,我还要删除不多余的,那就得删除那些"只有一个人站岗的了"
+  + 我们来看看解法的全部代码main.cc
+    #+begin_src cpp
+      #include <iostream>
+
+      using namespace std;
+
+      int main(int argc, char *argv[])
+      {
+          int n, k;
+          while (scanf("%d%d", &n,&k ) != EOF) {
+              int arr[100000] = {0};
+              for (int i = 0; i < n; i++) {
+                  int cur;
+                  scanf("%d", &cur);
+                  arr[cur]++;
+              }
+              int cnt = 0;
+              for (int i = 0; i < 100000; i++) {
+                  if (arr[i] > 0) {
+                      cnt += 1;
+                  }
+              }
+              if (k <= (n - cnt)) {
+                  cout << cnt << endl;
+              } else {
+                  cout << n - k << endl;
+              }
+          }
+          return 0;
+      }
+    #+end_src
+  + 输入输出就不讲了(但是很重要,一定要背下来否则考试的时候就完蛋了)
+    #+begin_src cpp
+      while (scanf("%d%d", &n,&k ) != EOF) {
+          // ...
+      }
+    #+end_src
+  + 申请一个超大数组这个10的9次方的数组能覆盖所有的输入,但是要用到heap上面申请内
+    存,那个太难了,你先弄个简单的80%的数据.注意,初始化为0
+    #+begin_src cpp
+      int arr[100000] = {0};
+    #+end_src
+  + 然后把n个输入都读入到数组中
+    #+begin_src cpp
+      for (int i = 0; i < n; i++) {
+          int cur;
+          scanf("%d", &cur);
+          arr[cur]++;
+      }
+    #+end_src
+  + n肯定是小于数组长度的,所以数组并不是所有都有值的,只有有值的那些个才有意义
+    #+begin_src cpp
+      for (int i = 0; i < 10000; i++) {
+          if (arr[i] > 0) {
+              cnt += 1;
+          }
+      }
+    #+end_src
+  + 如果k小于n-cnt,说明有富余,我们可以把所有的类型展现出来:
+    -  cnt
+  + 否则就只能展现cnt - (k - (n - cnt)),也就是
+    - n - k
